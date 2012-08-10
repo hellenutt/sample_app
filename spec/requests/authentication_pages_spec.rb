@@ -22,7 +22,7 @@ describe "Authentication" do
 
 			describe "after visiting another page" do
 				before { click_link "Home" }
-				it { should_not have_selector('div.alert.alert-error') }
+				it { should_not have_error_message }
 			end
 		end
 
@@ -30,6 +30,7 @@ describe "Authentication" do
 			let(:user) { FactoryGirl.create(:user) }
 			before { valid_signin(user) }
 
+			it { should_not have_error_message('Invalid') }
 			it { should have_selector('title', text: user.name) }
 			it { should have_link('Profile', href: user_path(user)) }
 			it { should have_link('Sign out', href: signout_path) }
