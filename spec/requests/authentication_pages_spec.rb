@@ -14,6 +14,11 @@ describe "Authentication" do
 	describe "signin" do
 		before { visit signin_path }
 
+		describe "links should not be visible" do
+			it { should_not have_link('Profile') }
+			it { should_not have_link('Settings')}
+		end
+
 		describe "with invalid information" do
 			before { click_button "Sign in" }
 
@@ -81,11 +86,24 @@ describe "Authentication" do
 					it "should render the desired protected page" do
 						page.should have_selector('title', text: 'Edit user')
 					end
+
+					describe "when signing in again" do
+						before do
+							visit signin_path
+							fill_in	"Email", with: user.email
+							fill_in "Password", with: user.password
+							click_button "Sign in"
+						end
+
+						it "should render the deafult (profile) page" do
+							page.should have_selector('title', text: user.name)
+						end
+					end
 				end
 			end
 		end
 
-		describe "ad non-admin user" do
+		describe "as non-admin user" do
 			let(:user) { FactoryGirl.create(:user) }
 			let(:non_admin) { FactoryGirl.create(:user) }
 
@@ -95,6 +113,20 @@ describe "Authentication" do
 				before { delete user_path(user) }
 				specify { response.should redirect_to(root_path) }
 			end
+		end
+
+		describe "as admin user" do
+			let(:user) { FactoryGirl.create(:user) }
+			before do
+				user.toggle!(:admin)
+				sign_in user
+			end
+
+			describe "submitting a DELETE request to the Users#destroy action on it self" do
+				before { delete user_path(user) }
+				specify { response.should redirect_to(root_path) }
+			end
+
 		end
 
 		describe "as wrong user" do
