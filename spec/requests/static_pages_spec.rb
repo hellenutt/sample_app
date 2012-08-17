@@ -22,14 +22,35 @@ describe "StaticPages" do
 			before do
 				FactoryGirl.create(:micropost, user: user, content: "Lorem impsum")
 				FactoryGirl.create(:micropost, user: user, content: "Dolor sit amet")
+				30.times { FactoryGirl.create(:micropost, user: user, content: "tjo do") }
 				sign_in user
 				visit root_path
 			end
 
-			it "should render the user's feed" do
-				user.feed.each do |item|
-					page.should have_selector("li##{item.id}", text: item.content)
+			it { should have_selector('div.pagination') }
+			it { should have_content('32 microposts') }
+
+		    it "should list each feed on page 1" do
+		        user.feed.paginate(page: 1).each do |item|
+		          page.should have_selector("li##{item.id}", text: item.content)
+		        end
+		    end
+
+			describe "with a single micropost" do
+				before do 
+					Micropost.delete_all
+					FactoryGirl.create(:micropost, user: user, content: "Lorem Ipsum")
+					visit root_path
 				end
+				it { should have_content('1 micropost') }
+			end
+
+			describe "with no microposts" do
+				before do
+					Micropost.delete_all
+					visit root_path
+				end
+				it { should have_content('0 microposts') }
 			end
 		end
 	end
